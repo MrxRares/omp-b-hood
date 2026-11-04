@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garage</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 5.5 5.5A2 2 0 0 1 7.3 4.4h9.4a2 2 0 0 1 1.8 1.1L21 11"/><path d="M3 11h18v6a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1H6.5v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="13.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="13.5" r=".6" fill="currentColor"/></svg>
+      </div>
+      <div>
+        <h1>Garage</h1>
+        <p>Personal vehicles</p>
+      </div>
+    </div>
+
+    <div class="slots" title="Vehicle slots">
+      <div class="slots-text"><b id="slotCount">0</b><span>/</span><span id="slotMax">0</span><em>slots</em></div>
+      <div class="slots-bar"><i id="slotBar"></i></div>
+    </div>
+
+    <label class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="search" type="text" placeholder="Search vehicle…" autocomplete="off" spellcheck="false">
+    </label>
+
+    <div class="wallet">
+      <div class="chip cash"><span>Cash</span><b id="cash">$0</b></div>
+      <div class="chip pp"><span>Premium points</span><b id="pp">0</b></div>
+    </div>
+
+    <button class="btn-close" id="closeBtn" type="button">Close <kbd>ESC</kbd></button>
+  </header>
+
+  <aside class="list panel">
+    <div class="panel-title"><span>My vehicles</span><em id="listCount">0</em></div>
+    <div class="cards" id="cards"></div>
+  </aside>
+
+  <main class="stage" id="stage"></main>
+
+  <aside class="side" id="side"></aside>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<div class="loading" id="loading"><div class="spinner"></div><span>Loading garage…</span></div>
+
+<script src="app.js"></script>
+</body>
+</html>

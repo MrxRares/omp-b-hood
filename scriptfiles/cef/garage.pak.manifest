@@ -1,0 +1,30 @@
+{
+    "files": {
+        "app.js": {
+            "encrypted": true,
+            "modified": 13438223284,
+            "size": 27665
+        },
+        "demo.js": {
+            "encrypted": true,
+            "modified": 13438218936,
+            "size": 3957
+        },
+        "index.html": {
+            "encrypted": true,
+            "modified": 13438222728,
+            "size": 2277
+        },
+        "style.css": {
+            "encrypted": true,
+            "modified": 13438223284,
+            "size": 17832
+        }
+    },
+    "pak": {
+        "hash": "8146a999e81f53e5f1e039e92c6d6a6d35374f9728f9f18a04b2a2b9b4882d04",
+        "path": "garage.pak",
+        "size": 52318
+    },
+    "version": 2
+}

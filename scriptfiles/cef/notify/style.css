@@ -1,0 +1,143 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+body {
+    background: transparent !important;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+}
+
+#notification-container {
+    position: fixed;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%) translateZ(0);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 280px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.notification {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #0d0f18;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transform: translate3d(50px, 0, 0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+    will-change: opacity, transform;
+    pointer-events: auto;
+    overflow: hidden; /* Ascunde surplusul bării de progres */
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+.notification.hide {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+}
+
+.notif-icon-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.notif-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.notif-title {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.notif-text {
+    font-size: 10px;
+    color: #a0a0b0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 4px;
+    margin-left: 4px;
+}
+
+.notif-close:hover {
+    color: #ffffff;
+}
+
+/* --- BARA DE PROGRES OPTIMIZATĂ --- */
+.notif-progress-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.notif-progress-bar {
+    width: 100%;
+    height: 100%;
+    /* Folosim o tranziție simplă pe lățime setată dinamic din JS în funcție de durată */
+    transition: width linear;
+}
+
+/* Teme de culori */
+.notification.admin { border-color: rgba(255, 59, 48, 0.4); }
+.notification.admin .notif-icon-box { background: rgba(255, 59, 48, 0.2); color: #ff3b30; }
+.notification.admin .notif-title { color: #ff3b30; }
+.notification.admin .notif-progress-bar { background: #ff3b30; }
+
+.notification.money_plus { border-color: rgba(16, 185, 129, 0.4); }
+.notification.money_plus .notif-icon-box { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.notification.money_plus .notif-title { color: #10b981; }
+.notification.money_plus .notif-progress-bar { background: #10b981; }
+
+.notification.error { border-color: rgba(245, 158, 11, 0.4); }
+.notification.error .notif-icon-box { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.notification.error .notif-title { color: #f59e0b; }
+.notification.error .notif-progress-bar { background: #f59e0b; }
+
+.notification.announcement { border-color: rgba(59, 130, 246, 0.4); }
+.notification.announcement .notif-icon-box { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+.notification.announcement .notif-title { color: #3b82f6; }
+.notification.announcement .notif-progress-bar { background: #3b82f6; }
+
+.notification.event { border-color: rgba(168, 85, 247, 0.4); }
+.notification.event .notif-icon-box { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+.notification.event .notif-title { color: #a855f7; }
+.notification.event .notif-progress-bar { background: #a855f7; }
