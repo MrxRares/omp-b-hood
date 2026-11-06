@@ -13,8 +13,6 @@
 #pragma warning disable 219, 213, 234, 200
 #include "../gamemodes/src/data/resource.pwn"
 
-#define BROWSER_ID_SPEEDOMETER  2
-
 enum hInfo {
 	hID,
 	Float:hEntrancex,
@@ -4138,8 +4136,7 @@ redist::IsStageUpgrade(playerid, idd) {
 }
 
 stock updateTextGarage(playerid, idd) {
-	format(gString, 180, "vehicle: %s~n~odometer: %.1f km~n~other - %s~n~age: %d days", GetVehicleName(CarInfo[idd][cModel]), CarInfo[idd][KM], TotalUp4(idd), CarInfo[idd][Dayss]);
-	PlayerTextDrawSetString(playerid, GaragePTD, gString);
+	va_PlayerTextDrawSetString(playerid, GaragePTD, "vehicle: %s~n~odometer: %.1f km~n~other - %s~n~age: %d days", GetVehicleName(CarInfo[idd][cModel]), CarInfo[idd][KM], TotalUp4(idd), CarInfo[idd][Dayss]);
 	return true;
 }
 
@@ -5218,27 +5215,6 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys) {
     return false;
 }
 
-cmd:getjob(playerid, params[]) {
-	if PlayerInfo[playerid][pJob] || PickupInfo[PlayerPickup[playerid]][pkType] != 5 *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Nu te aflii in jurul unui punct de job.");
-
-	new j = PickupInfo[PlayerPickup[playerid]][pkID];
-    if IsPlayerInAnyVehicle(playerid) *then
-    	return SendClientMessage(playerid, COLOR_LGREEN, "Eroare: Nu poti aceasta comanda dintr-un vehicul!");
-    
-    if !PlayerToPoint(3, playerid, JobInfo[j][jPosX], JobInfo[j][jPosY], JobInfo[j][jPosZ]) *then
-    	return true;
-
-	if PlayerInfo[playerid][pLevel] < JobInfo[j][jLevel] *then
-		return SCMf(playerid, COLOR_WHITE, "Ai nevoie de level %d pentru a lua jobul %s.",  JobInfo[j][jLevel], JobInfo[j][jName]);
-
-	CurseFacute[playerid] = 0;
-	SCMf(playerid, -1, "Your new job is now %s. Use (/help > 'Job commands') to see commands.", JobInfo[j][jName]);
-	PlayerInfo[playerid][pJob] = j;
-	UpdateVar(playerid, "Job", PlayerInfo[playerid][pJob]);
-	if(PlayerInfo[playerid][pTutorial] == 4) return JobTutorial(playerid, j);
-	return true;
-}
 stock attach_player_pet(playerid) {
 	switch(PlayerInfo[playerid][pPet]) {
     	case 0: SetPlayerAttachedObject(playerid, 6, 19078, 17, 0.021065, -0.100726, 0.143000, 357.120239, 1.712298, 349.232513, 1.000000, 1.000000, 1.120420);
@@ -5253,29 +5229,7 @@ stock attach_player_pet(playerid) {
 }
 new const name_pet[][] = {"Parrot", "Turtle", "Cow", "Pony", "Shark", "Special", "Star", "Shell"};
 new const level_pet[] = {1, 5, 10, 15, 20, 21, 25, 30};
-cmd:quitjob(playerid, params[]) {
-	if(PlayerInfo[playerid][pJob] == 0) 
-		return SendClientMessage(playerid, COLOR_LGREEN, "Eroare: Nu ai un job");
-	
-	SCMf(playerid, -1, "You resigned from the %s job. Now you're unemployed.", JobInfo[PlayerInfo[playerid][pJob]][jName]);
 
-	stopWork(playerid);
-	PlayerInfo[playerid][pJob] = 0;
-	UsedFind[playerid] = 0;
-	DisablePlayerCheckpointEx(playerid);
-	PlayerTextDrawHide(playerid, FindTD);
-	targetfind[playerid] = -1;
-	CurseFacute[playerid] = 0;
-	if(PlayerInfo[playerid][pShowProgress][1]) DestroyProgress(playerid, 1);
-
-	gQuery[0] = EOS;
-	mysql_format(SQL, gQuery, sizeof(gQuery), "UPDATE `users` SET `Job`='0' WHERE `ID`='%d' LIMIT 1", PlayerInfo[playerid][pSQLID]);
-	mysql_tquery(SQL, gQuery, "", "");
-
-	DisablePlayerRaceCheckpointEx(playerid);
-	BagTime[playerid] = 0;
-	return true;
-}
 
 redist::give_rob_wanted(playerid) {
 	PlayerInfo[playerid][pWantedLevel] = 6;
@@ -19642,74 +19596,79 @@ cmd:tod(playerid, params[]) {
 }
 
 cmd:weather(playerid, params[]) {
-	if(PlayerInfo[playerid][pAdmin] < 4) return SendClientMessage(playerid, COLOR_WHITE, AdminOnly);
-	new weather,string[60];
-	if(sscanf(params, "i",weather)) return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/weather <id>");
-	if(weather < 0||weather > 45) return SendClientMessage(playerid, -1, "Vreme invalida (1-45).");
+	if(PlayerInfo[playerid][pAdmin] < 4) return SendClientNotification(playerid, "error", "Eroare", 5000, "Nu esti autorizat sa folosesti aceasta comanda!");
+
+	extract params -> new weather; else return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/weather <id>");
+
+	if( 0 < weather > 45) return SendClientMessage(playerid, -1, "Vreme invalida (1-45).");
+
 	SetWeather(weather);
-	format(string, sizeof(string), "AdmCmd: %s a setat vremea %d.", GetName(playerid),weather);
-	if(!Iter_Contains(Acovers, playerid)) SendAdminMessage(COLOR_WHITE, 4, string);
+	
+	SendAdminMessage(COLOR_WHITE, 4, "AdmCmd: %s a setat vremea %d.", GetName(playerid),weather);
 	return true;
 }
+
+
 cmd:sett(playerid, params[]) {
-	if(PlayerInfo[playerid][pVip] < 1) return SendClientMessage(playerid, COLOR_LGREEN, "Eroare: Nu ai cont VIP!");
-	new hour, string[30];
-	if(sscanf(params, "i", hour)) return SendClientMessage(playerid, COLOR_GREY, "Usage: {FFFFFF}/sett <time>");
-	if(hour < 0 || hour > 23) return SendClientMessage(playerid, COLOR_GREY, "Invalid (0 - 23).");
+	if(PlayerInfo[playerid][pVip] < 1) return SendClientNotification(playerid, "error", "Eroare", 5000, "Nu ai un cont VIP!");
+
+	extract params -> new hour; else return SendClientMessage(playerid, COLOR_GREY, "Usage: {FFFFFF}/sett <time>");
+	if(0 < hour > 23) return SendClientMessage(playerid, COLOR_GREY, "Invalid (0 - 23).");
+
 	SetPlayerTime(playerid, hour, 0);
-	format(string, sizeof(string), "New time %d.", hour);
-	SendClientMessage(playerid, COLOR_LGREEN, string);
+	va_SendClientMessage(playerid, COLOR_LGREEN, "New time %d.", hour);
 	return true;
 }
+
 cmd:setw(playerid, params[]) {
-	if(PlayerInfo[playerid][pVip] < 1) return SendClientMessage(playerid, COLOR_LGREEN, "Eroare: Nu ai cont VIP!");
-	new weather, string[30];
-	if(sscanf(params, "i", weather)) return SendClientMessage(playerid, COLOR_GREY, "Usage: {FFFFFF}/setw <weather>");
-	if(weather < 0 || weather > 45) return SendClientMessage(playerid, COLOR_GREY, "Invalid (1 - 45).");
+	if(PlayerInfo[playerid][pVip] < 1) return SendClientNotification(playerid, "error", "Eroare", 5000, "Nu ai un cont VIP!");
+
+	extract params -> new weather; else return SendClientMessage(playerid, COLOR_GREY, "Usage: {FFFFFF}/setw <weather>");
+	if(0 < weather > 45) return SendClientMessage(playerid, COLOR_GREY, "Invalid (1 - 45).");
+
 	SetPlayerWeather(playerid, weather);
-	format(string, sizeof(string), "New weather %d.", weather);
-	SendClientMessage(playerid, COLOR_LGREEN, string);
+	va_SendClientMessage(playerid, COLOR_LGREEN, "New weather %d.", weather);
 	return true;
 }
 cmd:slap(playerid, params[]) {
-	if !IsHelper(playerid, 1) && !IsAdmin(playerid, 1) *then 
-		return SendClientMessage(playerid, COLOR_WHITE,"Nu ai acces la aceasta comanda.");
+	if(!IsHelper(playerid, 1) && !IsAdmin(playerid, 1)) 
+	    return SendClientNotification(playerid, "error", "Eroare", 5000, "Nu esti autorizat sa folosesti aceasta comanda!");
 
 	extract params -> new player:id; else
 		return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/slap <playerid/name>");
 
-	if !IsPlayerConnected(id) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
+	if(!IsPlayerConnected(id) || !IsPlayerLogged(id)) 
+	    return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
 
-	if !IsPlayerLogged(id) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este logat!");
 
 	new Float:slx, Float:sly, Float:slz;
 	GetPlayerPos(id, slx, sly, slz);
 	SetPlayerPos(id, slx, sly, slz+5);
 	PlayerPlaySound(id, 1190, slx, sly, slz+5);
-	format(gString, 128, "(/slap): {FFFFFF}%s has slapped %s.", GetName(playerid), GetName(id));
-	SendAdminMessage(COLOR_LIGHTRED, 1, gString);
-	SCMf(id, 0xFFADADFF, "You have been slapped by admin %s.", GetName(playerid));
+
+	SendAdminMessage(COLOR_LIGHTRED, 1, "(/slap): {FFFFFF}%s has slapped %s.", GetName(playerid), GetName(id));
+	va_SendClientMessage(id, 0xFFADADFF, "You have been slapped by admin %s.", GetName(playerid));
 	return true;
 }
 
 cmd:up(playerid, params[]) {
-	if !IsHelper(playerid, 1) && !IsAdmin(playerid, 1) *then 
-		return SendClientMessage(playerid, COLOR_WHITE,"Nu ai acces la aceasta comanda.");
+	if(!IsHelper(playerid, 1) && !IsAdmin(playerid, 1))
+	    return SendClientNotification(playerid, "error", "Eroare", 5000, "Nu esti autorizat sa folosesti aceasta comanda!");
 
 	new Float:slx, Float:sly, Float:slz;
 	GetPlayerPos(playerid, slx, sly, slz);
 	SetPlayerPos(playerid, slx, sly, slz+5);
 	return true;
 }
-cmd:money(playerid, params[]) {
-	if !IsAdmin(playerid, 6) *then
-		return SendClientMessage(playerid, COLOR_LGREEN, AdminOnly);
 
-	extract params -> new player:id, string:money[15]; else
-		return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/money <playerid/name> <Suma>");
 
+cmd:givemoney(playerid, params[]) {
+	if !IsAdmin(playerid, 6) *then 
+		return SendClientMessage(playerid, COLOR_WHITE, AdminOnly);
+
+	extract params -> new player:id, string:money[20]; else 
+		return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/givemoney <playerid/name> <Suma>");
+	
 	if !IsPlayerConnected(id) *then 
 		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
 
@@ -19717,14 +19676,18 @@ cmd:money(playerid, params[]) {
 		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este logat!");
 
 	if !isBigInt(money) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Money invalid.");
+		return SendClientMessage(playerid, COLOR_GREY, "Invalid money!");
 
-	resetBigInt(money[id]),converBytes(money[id],money);
-	ResetPlayerMoney(playerid);
-	GivePlayerMoney(playerid, bytes32(money[id]));
-	format(gString, 128, "(/money) {FFFFFF}%s i-a setat bani lui %s, $%s.", GetName(playerid),GetName(id), formatBytes(money[id]));
-	SendAdminMessage(COLOR_RED, 5, gString);
-	SCMf(id, COLOR_WHITE, "Admin {7BAABA}%s{FFFFFF} ti-a setat banii la $%s.", GetName(playerid), formatBytes(money[id]));
+
+	converBytes(money[id], money);
+
+	ResetPlayerMoney(id);
+	GivePlayerMoney(id, bytes32(money[id]));
+
+	SendAdminMessage(COLOR_YELLOW, 5, "{FFFF00}(/givemoney) {FFFFFF}%s give %s, $%s money", GetName(playerid), GetName(id), FormatNumbers(money));
+	SendClientMessage(id, COLOR_WHITE, "Admin-ul %s ti-a dat $%s", GetName(playerid), FormatNumbers(money));
+	format(gString, 128, "%s a primit $%s de la %s", GetName(id), FormatNumbers(money), GetName(playerid));
+	InsertLog(id, gString, LOG_MONEY);
 	return true;
 }
 
@@ -20177,8 +20140,7 @@ cmd:setleader(playerid, params[]) {
 		return SendClientMessage(playerid,COLOR_WHITE, "Acel player este intr-o factiune.");
 
 	gString[0] = gQuery[0] = (EOS);
-	format(gString, 128, "%s este noul lider al factiunii.", GetName(params[0]));
-	SendFactionMessage(params[1], COLOR_CLIENT, gString);
+	SendFactionMessage(params[1], COLOR_CLIENT, "%s este noul lider al factiunii.", GetName(params[0]));
 	Iter_Add(faction_players<params[1]>, params[0]);
 	Iter_Add(faction_leaders, params[0]);
 	PlayerInfo[params[0]][pMember] = params[1];
@@ -22721,37 +22683,7 @@ cmd:gfforall(playerid, params[]) {
 	return true;
 }
 
-cmd:givemoney(playerid, params[]) {
-	if !IsAdmin(playerid, 6) *then 
-		return SendClientMessage(playerid, COLOR_WHITE, AdminOnly);
 
-	extract params -> new player:id, string:money[20]; else 
-		return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/givemoney <playerid/name> <Suma>");
-	
-	if !IsPlayerConnected(id) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
-
-	if !IsPlayerLogged(id) *then
-		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este logat!");
-
-	if !isBigInt(money) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Invalid money!");
-
-
-	converBytes(money[id], money);
-
-	ResetPlayerMoney(id);
-	GivePlayerMoney(id, bytes32(money[id]));
-
-	gString[0] = EOS;
-	format(gString, 128, "(/givemoney) {FFFFFF}%s give %s, $%s money", GetName(playerid), GetName(id), FormatNumbers(money));
-	SendAdminMessage(COLOR_WARNING, 5, gString);
-	format(gString, 128, "Admin-ul %s ti-a dat $%s", GetName(playerid), FormatNumbers(money));
-	SendClientMessage(id, COLOR_WHITE, gString);
-	format(gString, 128, "%s a primit $%s de la %s", GetName(id), FormatNumbers(money), GetName(playerid));
-	InsertLog(id, gString, LOG_MONEY);
-	return true;
-}
 cmd:moneyforall(playerid, params[]) {
 	if !IsAdmin(playerid, 6) *then 
 		return SendClientMessage(playerid, COLOR_GREY, "Nu esti autorizat sa folosesti aceasta comanda!");
@@ -25099,7 +25031,7 @@ cmd:f(playerid, params[]) {
 		return true;
 	}		
 	format(gString, 180, "(/f) %s %s: %s", GetRankName(playerid), GetName(playerid), params); 
-	SendFactionMessage(PlayerInfo[playerid][pMember], PlayerInfo[playerid][pRank]<6?0x00D5FFFF:0x00AAFFFF, gString);
+	SendFactionMessage(PlayerInfo[playerid][pMember], PlayerInfo[playerid][pRank]<6?0x00D5FFFF:0x00AAFFFF, "(/f) %s %s: %s", GetRankName(playerid), GetName(playerid), params);
 	ChatLog(playerid, gString);	
 	return true;
 }
@@ -30631,14 +30563,18 @@ redist::SendNewbieMessage(color,const string[]) {
 	foreach(new i : logged_players) if(NewbieChat[i]) SendClientMessage(i, color, string);
 	return true;
 }
-redist::SendAdminMessage(color, level, const string[], {Float, _}:...) {
-	foreach( Staff<ADMIN>, i) {
+
+
+
+stock SendAdminMessage(level, color, const string[], va_args<>) {
+	foreach(Staff<ADMIN>, i) {
 		if(PlayerInfo[i][pAdmin] >= level) {
-			va_SendClientMessage(i, color, string);
+			SendClientMessage(i, color, va_return(string, va_start<3>));
 		}
 	}
-	return true;
+	return 1;
 }
+
 
 redist::InsertLog(playerid, const text[], type) {
 	new szDate[180], Year, Month, Day, Hour, Minute, Second, ip[180];

@@ -2,29 +2,29 @@
     "files": {
         "app.js": {
             "encrypted": true,
-            "modified": 13438223284,
-            "size": 27665
+            "modified": 13438441801,
+            "size": 28198
         },
         "demo.js": {
             "encrypted": true,
-            "modified": 13438218936,
-            "size": 3957
+            "modified": 13438441801,
+            "size": 4011
         },
         "index.html": {
             "encrypted": true,
-            "modified": 13438222728,
-            "size": 2277
+            "modified": 13438441801,
+            "size": 2339
         },
         "style.css": {
             "encrypted": true,
-            "modified": 13438223284,
-            "size": 17832
+            "modified": 13438441801,
+            "size": 18180
         }
     },
     "pak": {
-        "hash": "8146a999e81f53e5f1e039e92c6d6a6d35374f9728f9f18a04b2a2b9b4882d04",
+        "hash": "01e1cdf7f541cf5e2896459bec2954004785842b5b7e0995dc6f5ee4fffd152e",
         "path": "garage.pak",
-        "size": 52318
+        "size": 53310
     },
     "version": 2
 }
