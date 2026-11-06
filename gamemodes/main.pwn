@@ -13700,23 +13700,22 @@ cmd:so(playerid, params[]) {
 	return true;
 }
 cmd:free(playerid, params[]) {
-	new id,moneyfree,string[100];
-	if(!IsACop(playerid)) return true;
+	if(!IsACop(playerid)) return SendClientMessage(playerid, COLOR_LGREEN, "Nu esti autorizat sa folosesti aceasta comanda!");
 	if(OnDuty[playerid] == 0) return SendClientMessage(playerid, COLOR_LGREEN, "Nu poti folosi aceasta comanda deoarece nu esti la datorie!");
-	if(sscanf(params, "ui", id,moneyfree)) return SendClientMessage(playerid, 0xFFFFFFFF,"Syntax: /free <playerid/name> <amount>");
+
+    extract params -> new id, moneyfree; else return SendClientMessage(playerid, 0xFFFFFFFF,"Syntax: /free <playerid/name> <amount>");
+
 	if(PlayerInfo[id][pRestriction]) return SendClientMessage(playerid, COLOR_GREY, "Acel player are o restrictie pentru free!");
 	if(PlayerInfo[id][pJailed] < 1) return SendClientMessage(playerid,COLOR_WHITE, "Acel player nu este in inchisoare.");
-	if(playerid == id) return true;
+	if(playerid == id) return SendClientMessage(playerid, COLOR_LGREEN, "Nu poti folosi aceasta comanda asupra ta!");
 	if(PlayerInfo[playerid][pLawyer] < 1) return SendClientMessage(playerid,-1, "Nu ai puncte de accept.");
 	if(!ProxDetectorS(10.0, playerid, id)) return SendClientMessage(playerid,COLOR_GREY, "Acel player nu se afla in raza ta!");
-	if(!IsPlayerConnected(id) || !IsPlayerConnected(id)) return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
-	if(moneyfree < 50000 || moneyfree > 500000) return SendClientMessage(playerid, -1, "Suma invalida! ($50000-$500000)");
-	FreeOffer[id] = playerid;
-	FreePrice[id] = moneyfree;
-	format(string, sizeof(string), "* I-ai oferit lui %s un free pentru %s$.",GetName(id),FormatNumber(moneyfree));
-	SendClientMessage(playerid, COLOR_MONEY, string);
-	format(string, sizeof(string), "* %s ti-a oferit un free pentru %s$, (scrie /accept free %d) pentru a accepta.",GetName(playerid),FormatNumber(moneyfree),playerid);
-	SendClientMessage(id, COLOR_MONEY, string);
+	if(!IsPlayerConnected(id) || !IsPlayerLogged(id)) return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
+	if(50000 < moneyfree > 500000) return SendClientMessage(playerid, -1, "Suma invalida! ($50000-$500000)");
+
+	FreeOffer[id] = playerid; FreePrice[id] = moneyfree;
+	va_SendClientMessage(playerid, COLOR_MONEY, "* I-ai oferit lui %s un free pentru %s$.",GetName(id),FormatNumber(moneyfree));
+	va_SendClientMessage(id, COLOR_MONEY, "* %s ti-a oferit un free pentru %s$, (scrie /accept free %d) pentru a accepta.",GetName(playerid),FormatNumber(moneyfree),playerid);
 	return true;
 }
 cmd:escape(playerid, params[]) {
@@ -19663,29 +19662,18 @@ cmd:up(playerid, params[]) {
 
 
 cmd:givemoney(playerid, params[]) {
-	if !IsAdmin(playerid, 6) *then 
-		return SendClientMessage(playerid, COLOR_WHITE, AdminOnly);
+	if !IsAdmin(playerid, 6) *then return SendClientMessage(playerid, COLOR_WHITE, AdminOnly);
 
-	extract params -> new player:id, string:money[20]; else 
-		return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/givemoney <playerid/name> <Suma>");
-	
-	if !IsPlayerConnected(id) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
+	extract params -> new player:id, string:money[20]; else return SendClientMessage(playerid,COLOR_GREY, "Syntax: {FFFFFF}/givemoney <playerid/name> <Suma>");
+	if !IsPlayerConnected(id) || !IsPlayerLogged(id) *then return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este conectat.");
+	if !isBigInt(money) *then return SendClientMessage(playerid, COLOR_GREY, "Invalid money!");
 
-	if !IsPlayerLogged(id) *then
-		return SendClientMessage(playerid, COLOR_GREY, "Acel player nu este logat!");
-
-	if !isBigInt(money) *then 
-		return SendClientMessage(playerid, COLOR_GREY, "Invalid money!");
-
-
-	converBytes(money[id], money);
-
-	ResetPlayerMoney(id);
+	converBytes(money[id], money); ResetPlayerMoney(id);
 	GivePlayerMoney(id, bytes32(money[id]));
 
 	SendAdminMessage(COLOR_YELLOW, 5, "{FFFF00}(/givemoney) {FFFFFF}%s give %s, $%s money", GetName(playerid), GetName(id), FormatNumbers(money));
 	SendClientMessage(id, COLOR_WHITE, "Admin-ul %s ti-a dat $%s", GetName(playerid), FormatNumbers(money));
+
 	format(gString, 128, "%s a primit $%s de la %s", GetName(id), FormatNumbers(money), GetName(playerid));
 	InsertLog(id, gString, LOG_MONEY);
 	return true;
@@ -23043,36 +23031,36 @@ cmd:licitatie(playerid, params[]) {
 	if(PlayerInfo[playerid][pAdmin] < 6) 
 		return true;
 
-	new id;
 	if(TipLicitatie) 
 		return SendClientMessage(playerid, -1, "Este deja o licitatie activa!");
 
-	if(sscanf(params, "s[50]i", params, id)) {
+	extract params -> new string:tip[10], id; else {
 		SendClientMessage(playerid, COLOR_GREY, "Syntax: {FFFFFF}/licitatie <tip> <id>");
 		SendClientMessage(playerid, COLOR_WHITE, "Valabile: Casa, Bizz, Job.");
 		return true;
 	}
-	if(!strcmp(params, "casa", true)) {
-		if(id > sizeof HouseInfo) return true;
-		if(!HouseInfo[id][hID]) return SendClientMessage(playerid, -1, "Invalid ID!");
-		TipLicitatie = 1;
-	}
-	else if(!strcmp(params, "bizz", true)) {
-		if(id > sizeof BizzInfo) return true;
-		if(!BizzInfo[id][bID]) return SendClientMessage(playerid, -1, "Invalid ID!");
-		TipLicitatie = 2;
-	}
-	else if(!strcmp(params, "job", true)) {
-		if(id > sizeof JobInfo) return true;
-		if(!JobInfo[id][jID]) return SendClientMessage(playerid, -1, "Invalid ID!");
-		TipLicitatie = 3;
-	}
-	else return SendClientMessage(playerid, COLOR_GREY, "Tip invalid!");
 
-	TimpLicitatie = 120;
-	IDLicitatie = id;
-	bid_money=0;
-	LastPlayer = -1;
+	switch YHash(tip) do {
+		case _H<house>: {
+		    if(id > sizeof HouseInfo) return true;
+		    if(!HouseInfo[id][hID]) return SendClientMessage(playerid, -1, "Invalid ID!");
+		    TipLicitatie = 1;			
+		}
+		case _H<bizz>: {
+		    if(id > sizeof BizzInfo) return true;
+		    if(!BizzInfo[id][bID]) return SendClientMessage(playerid, -1, "Invalid ID!");
+		    TipLicitatie = 2;			
+		}
+		case _H<job>: {
+		    if(id > sizeof JobInfo) return true;
+		    if(!JobInfo[id][jID]) return SendClientMessage(playerid, -1, "Invalid ID!");
+		    TipLicitatie = 3;			
+		}
+		default: return SendClientMessage(playerid, -1, "Tip de licitatie invalid, Valabile: Casa, Bizz, Job.");
+	}
+		
+	TimpLicitatie = 120; IDLicitatie = id;
+	bid_money=0; LastPlayer = -1;
 	
 	MesajLicitatie(0xAA71B7FF, "[BID] O noua licitatie tocmai a inceput!");
 	switch(TipLicitatie) {
